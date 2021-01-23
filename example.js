@@ -72,8 +72,8 @@ app.get('/data', async (req, res) => {
     else {
       const isAuth = await bot.hasUserRole(botConfig.guild, result.object.id, botConfig.role);
       var response;
-      if (isAuth) response = "Hellol";
-      else response = "FAK OFF";
+      if (isAuth) response = "Hi, my VIP";
+      else response = "Nope. Don't try";
       res.end(response);
     }
   } else res.redirect("/");
