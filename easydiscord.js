@@ -1,6 +1,6 @@
 const DiscordApi = require('./discordapi');
 
-module.exports = class EasyDiscord {
+class NewEasyDiscord {
 	/**
 	 *
 	 * @param config oauth configuration table ({id, secret})
@@ -14,23 +14,24 @@ module.exports = class EasyDiscord {
 	/**
 	 * Redirect to Discord authorization site
 	 *
-	 * @param req IncomingMessage object (from express package)
-	 * @param res OutgoungMessage object (from express package)
+	 * @param sessionID unique sessionID
+	 * @param res OutgoungMessage object
 	 *
 	 */
-	request(req, res) {
-		res.redirect(this._discord.createRequest(req.sessionID));
+	request(sessionID, res) {
+		res.redirect(this._discord.createRequest(sessionID));
 	}
 
 	/**
 	 * Process response from Discord authorization site
 	 *
-	 * @param req IncomingMessage object (from express package)
+     * @param query deserialized get query
+	 * @param sessionID unique sessionID, previously used in request()
 	 *
-	 * @returns full response information
+	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
 	 */
-	async response(req) {
-		const { code, state, error, error_description } = req.query;
+	async response(query, sessionID) {
+		const { code, state, error, error_description } = query;
 		const result = {
 			object: null,
 			error: null,
@@ -44,7 +45,7 @@ module.exports = class EasyDiscord {
 				result.error = {error, error_description};
 			}
 		}
-		else if (code && state === req.sessionID) {
+		else if (code && state === sessionID) {
 			const response = await this._discord.continueRequest(code);
 			if (response.object) {
 				try {
@@ -63,3 +64,42 @@ module.exports = class EasyDiscord {
 		return result;
 	}
 }
+
+class EasyDiscord extends NewEasyDiscord {
+    /**
+	 *
+	 * @param config oauth configuration table ({id, secret})
+	 * @param callback url callback which calls response(req)
+	 *
+	 */
+	constructor(config, callback) {
+        super(config, callback);
+    }
+
+    /**
+	 * Redirect to Discord authorization site
+	 *
+	 * @param req IncomingMessage object (from express-session)
+	 * @param res OutgoungMessage object
+	 *
+	 */
+	request(req, res) {
+        super.request(req.sessionID, res);
+	}
+
+    /**
+	 * Process response from Discord authorization site
+	 *
+	 * @param req IncomingMessage object (from express-session)
+	 *
+	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
+	 */
+	async response(req) {
+        super.response(req.query, req.sessionID);
+    }
+}
+
+module.exports = {
+    EasyDiscord,
+    NewEasyDiscord,
+};
