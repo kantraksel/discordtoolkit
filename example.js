@@ -1,6 +1,4 @@
 /*
-This file is NOT licensed under GNU AGPL v3 license!
-
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
