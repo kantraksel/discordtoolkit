@@ -1,15 +1,10 @@
 {
   "name": "discordtoolkit",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Simple toolkit for interactions with Discord",
   "main": "index.js",
   "dependencies": {
-    "bufferutil": "^4.0.3",
-    "discord.js": "^12.5.1",
-    "erlpack": "^0.1.3",
-    "simple-oauth2": "^4.3.0",
-    "utf-8-validate": "^5.0.4",
-    "zlib-sync": "^0.1.7"
+    "simple-oauth2": "^4.3.0"
   },
   "devDependencies": {},
   "scripts": {
