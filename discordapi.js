@@ -1,85 +1,92 @@
 const { AuthorizationCode } = require('simple-oauth2');
-const Wreck = require('@hapi/wreck');
+const https = require('node:https');
 
 async function HttpGet(token, url) {
 	const httpOptions = {
-		json: 'strict',
-		redirects: 0,
 		timeout: 10000,
 		headers: {
-			Authorization: `Bearer ${token}`
-		}
+			Authorization: `Bearer ${token}`,
+		},
 	};
 
-	const client = Wreck.defaults(httpOptions);
-    const response = await client.get(url);
-    return response.payload;
+	return new Promise((resolve, reject) => {
+		https.get(url, httpOptions, (res) => {
+			res.setEncoding('utf8');
+	
+			let data = '';
+			res.on('data', (chunk) => {
+				data += chunk;
+			});
+	
+			res.on('end', () => {
+				if (res.statusCode !== 200) {
+					reject(res.statusCode);
+				}
+				try {
+					resolve(JSON.parse(data));
+				} catch (_) {
+					reject(0);
+				}
+			});
+		}).on('error', (_) => {
+			reject(0);
+		});
+	});
 }
 
-class DiscordResources {
+class DiscordResource {
 	constructor(accessToken) {
-		this.accessToken = accessToken;
+		this._accessToken = accessToken;
 	}
 
 	async getUser() {
-		var response;
-		try {
-			response = await HttpGet(this.accessToken.token.access_token, "https://discord.com/api/users/@me");
-		} catch (error) {}
-		return response;
+		return await HttpGet(this._accessToken.token.access_token, "https://discord.com/api/users/@me");
 	}
 
 	async revokeAccess() {
 		try {
-			await this.accessToken.revokeAll();
-		} catch (error) {}
+			await this._accessToken.revokeAll();
+		} catch (_) {}
 	}
 }
 
 module.exports = class DiscordApi {
 	constructor(config, callback) {
-		this.callback = callback;
-		this.client = Object.freeze(new AuthorizationCode({
+		this._client = new AuthorizationCode({
 			client: config,
 			auth: {
 				tokenHost: 'https://discord.com/api',
 				tokenPath: '/api/oauth2/token',
 				revokePath: '/api/oauth2/token/revoke',
-				authorizePath: '/oauth2/authorize'
+				authorizePath: '/oauth2/authorize',
 			},
 			options: {
-				authorizationMethod: "body"
-			}
-		}));
+				authorizationMethod: "body",
+			},
+		});
+
+		this._header = {
+			scope: 'identify',
+			redirect_uri: callback,
+		};
 	}
 
 	createRequest(id) {
-		const authUrl = this.client.authorizeURL({
-			redirect_uri: this.callback,
-			scope: 'identify',
-			state: id
+		return this._client.authorizeURL({
+			state: id,
+			...this._header,
 		});
-		return authUrl;
 	}
 
 	async continueRequest(code) {
-		const response = {
-			result: true,
-			object: null
-		};
-
 		try {
-			const accessToken = await this.client.getToken({
+			const accessToken = await this._client.getToken({
 				code,
-				redirect_uri: this.callback,
-				scope: 'identify'
+				...this._header,
 			});
-			response.object = new DiscordResources(accessToken);
+			return {object: new DiscordResource(accessToken)};
 		} catch (error) {
-			response.object = error;
-			response.result = false;
+			return {error: error};
 		}
-
-		return response;
 	}
 }

@@ -31,19 +31,19 @@ const app = express();
 
 const discord = new EasyDiscord({
   id: '',
-  secret: ''
-}, 'http://localhost:3000/callback'); //see line 61
+  secret: '',
+}, 'http://localhost:3000/callback'); //see line app.get('/callback'
 const bot = new DiscordBot();
 const botConfig = {
   token: '',
   guild: '', //id
-  role: '' //id
-}
+  role: '', //id
+};
 
 app.use(session({
   secret: 'no',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
 }));
 
 app.get('/', (req, res) => {
@@ -66,28 +66,31 @@ app.get('/callback', async function (req, res) {
 app.get('/data', async (req, res) => {
   if (req.session.dauth) {
     const result = req.session.dresult;
-    if (!result.result) res.redirect('/error');
+    if (!result.object) res.redirect('/error');
     else {
       const isAuth = await bot.hasUserRole(botConfig.guild, result.object.id, botConfig.role);
-      var response;
+      let response;
       if (isAuth) response = "Hi, my VIP";
       else response = "Nope. Don't try";
       res.end(response);
     }
-  } else res.redirect("/");
+  } else {
+    res.redirect("/");
+  }
 });
 
 app.get('/error', (req, res) => {
   if (req.session.dauth) {
     const result = req.session.dresult;
-    var response;
-    if (result.cancel_by_user) response = "Cancel by user (pog)"
-    else if (result.invalid_state) response = "CSRF";
-    else if (result.no_code) response = "Invalid request";
-    else if (result.auth) response = `AUTH: ${result.object}`;
-    else response = `Internal: ${result.object}`;
+    let response;
+    if (result.cancel_by_user) response = "Canceled by user"
+    else if (result.error) response = `Error: ${JSON.stringify(result.error)}`;
+    else response = 'Unknown error';
+
     res.end(response);
-  } else res.redirect("/");
+  } else {
+    res.redirect("/");
+  }
 });
 
 bot.start(botConfig.token)
