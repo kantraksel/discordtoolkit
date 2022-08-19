@@ -1,5 +1,5 @@
 const { AuthorizationCode } = require('simple-oauth2');
-const https = require('node:https');
+const https = require('https');
 
 async function HttpGet(token, url) {
 	const httpOptions = {
@@ -13,9 +13,9 @@ async function HttpGet(token, url) {
 		https.get(url, httpOptions, (res) => {
 			res.setEncoding('utf8');
 	
-			let data = '';
+			const data = [];
 			res.on('data', (chunk) => {
-				data += chunk;
+				data.push(chunk);
 			});
 	
 			res.on('end', () => {
@@ -23,7 +23,7 @@ async function HttpGet(token, url) {
 					reject(res.statusCode);
 				}
 				try {
-					resolve(JSON.parse(data));
+					resolve(JSON.parse(data.toString()));
 				} catch (_) {
 					reject(0);
 				}
@@ -89,4 +89,4 @@ module.exports = class DiscordApi {
 			return {error: error};
 		}
 	}
-}
+};

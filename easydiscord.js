@@ -25,7 +25,7 @@ class NewEasyDiscord {
 	/**
 	 * Process response from Discord authorization site
 	 *
-     * @param query deserialized get query
+	 * @param query deserialized get query
 	 * @param sessionID unique sessionID, previously used in request()
 	 *
 	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
@@ -39,13 +39,12 @@ class NewEasyDiscord {
 		};
 
 		if (error) {
-			if (error === 'access_denied')
+			if (error === 'access_denied') {
 				result.cancel_by_user = true;
-			else {
+			} else {
 				result.error = {error, error_description};
 			}
-		}
-		else if (code && state === sessionID) {
+		} else if (code && state === sessionID) {
 			const response = await this._discord.continueRequest(code);
 			if (response.object) {
 				try {
@@ -66,17 +65,17 @@ class NewEasyDiscord {
 }
 
 class EasyDiscord extends NewEasyDiscord {
-    /**
+	/**
 	 *
 	 * @param config oauth configuration table ({id, secret})
 	 * @param callback url callback which calls response(req)
 	 *
 	 */
 	constructor(config, callback) {
-        super(config, callback);
-    }
+		super(config, callback);
+	}
 
-    /**
+	/**
 	 * Redirect to Discord authorization site
 	 *
 	 * @param req IncomingMessage object (from express-session)
@@ -84,10 +83,10 @@ class EasyDiscord extends NewEasyDiscord {
 	 *
 	 */
 	request(req, res) {
-        super.request(req.sessionID, res);
+		super.request(req.sessionID, res);
 	}
 
-    /**
+	/**
 	 * Process response from Discord authorization site
 	 *
 	 * @param req IncomingMessage object (from express-session)
@@ -95,11 +94,11 @@ class EasyDiscord extends NewEasyDiscord {
 	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
 	 */
 	async response(req) {
-        return super.response(req.query, req.sessionID);
-    }
+		return super.response(req.query, req.sessionID);
+	}
 }
 
 module.exports = {
-    EasyDiscord,
-    NewEasyDiscord,
+	EasyDiscord,
+	NewEasyDiscord,
 };
