@@ -95,7 +95,7 @@ class EasyDiscord extends NewEasyDiscord {
 	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
 	 */
 	async response(req) {
-        super.response(req.query, req.sessionID);
+        return super.response(req.query, req.sessionID);
     }
 }
 
