@@ -2,13 +2,13 @@ const DiscordApi = require('./discordapi');
 
 class NewEasyDiscord {
 	/**
-	 *
 	 * @param config oauth configuration table ({id, secret})
 	 * @param callback url callback which calls response(req)
+	 * @param scopes scopes used in authorization
 	 *
 	 */
-	constructor(config, callback) {
-		this._discord = new DiscordApi(config, callback);
+	constructor(config, callback, scopes) {
+		this._discord = new DiscordApi(config, callback, scopes);
 	}
 
 	/**
@@ -66,13 +66,13 @@ class NewEasyDiscord {
 
 class EasyDiscord extends NewEasyDiscord {
 	/**
-	 *
 	 * @param config oauth configuration table ({id, secret})
 	 * @param callback url callback which calls response(req)
+	 * @param scopes scopes used in authorization
 	 *
 	 */
-	constructor(config, callback) {
-		super(config, callback);
+	constructor(config, callback, scopes) {
+		super(config, callback, scopes);
 	}
 
 	/**

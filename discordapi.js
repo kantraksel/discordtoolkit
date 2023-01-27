@@ -39,10 +39,29 @@ class DiscordResource {
 		this._accessToken = accessToken;
 	}
 
+	/**
+	 * Get current user
+	 * 
+	 * @returns User object | error number
+	 */
 	async getUser() {
 		return await HttpGet(this._accessToken.token.access_token, "https://discord.com/api/users/@me");
 	}
 
+	/**
+	 * Get member of guild
+	 * 
+	 * @param guildId Guild Id
+	 * 
+	 * @returns Guild Member object | error number
+	 */
+	async getMemberFromGuild(guildId) {
+		return await HttpGet(this._accessToken.token.access_token, `https://discord.com/api/guilds/${guildId}/members/@me`);
+	}
+
+	/**
+	 * Revokes access token
+	 */
 	async revokeAccess() {
 		try {
 			await this._accessToken.revokeAll();
@@ -51,7 +70,15 @@ class DiscordResource {
 }
 
 module.exports = class DiscordApi {
-	constructor(config, callback) {
+
+	/**
+	 *
+	 * @param config oauth configuration table ({id, secret})
+	 * @param callback url callback which calls response(req)
+	 * @param scopes scopes used in authorization
+	 *
+	 */
+	constructor(config, callback, scopes) {
 		this._client = new AuthorizationCode({
 			client: config,
 			auth: {
@@ -61,16 +88,23 @@ module.exports = class DiscordApi {
 				authorizePath: '/oauth2/authorize',
 			},
 			options: {
-				authorizationMethod: "body",
+				authorizationMethod: 'body',
 			},
 		});
 
 		this._header = {
-			scope: 'identify',
+			scope: scopes,
 			redirect_uri: callback,
 		};
 	}
 
+	/**
+	 * Creates url to authorization site
+	 *
+	 * @param id state id - cross site security parameter
+	 *
+	 * @returns string
+	 */
 	createRequest(id) {
 		return this._client.authorizeURL({
 			state: id,
@@ -78,6 +112,13 @@ module.exports = class DiscordApi {
 		});
 	}
 
+	/**
+	 * Gets access token from authorization code
+	 *
+	 * @param code code got from authorization site
+	 * 
+	 * @returns object { object: DiscordResource | error: object }
+	 */
 	async continueRequest(code) {
 		try {
 			const accessToken = await this._client.getToken({
