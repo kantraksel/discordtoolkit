@@ -37,6 +37,7 @@ async function HttpGet(token, url) {
 class DiscordResource {
 	constructor(accessToken) {
 		this._accessToken = accessToken;
+		this.accessToken = accessToken.token.access_token;
 	}
 
 	/**
@@ -56,7 +57,7 @@ class DiscordResource {
 	 * @returns Guild Member object | error number
 	 */
 	async getMemberFromGuild(guildId) {
-		return await HttpGet(this._accessToken.token.access_token, `https://discord.com/api/guilds/${guildId}/members/@me`);
+		return await HttpGet(this._accessToken.token.access_token, `https://discord.com/api/users/@me/guilds/${guildId}/member`);
 	}
 
 	/**

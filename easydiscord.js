@@ -24,16 +24,17 @@ class NewEasyDiscord {
 
 	/**
 	 * Process response from Discord authorization site
+	 * Returns access token wrapped in DiscordResource
 	 *
-	 * @param query deserialized get query
+	 * @param query deserialized GET query
 	 * @param sessionID unique sessionID, previously used in request()
 	 *
-	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
+	 * @returns object {resource: DiscordResource | null, error: object | number | null, cancel_by_user: boolean}
 	 */
 	async response(query, sessionID) {
 		const { code, state, error, error_description } = query;
 		const result = {
-			object: null,
+			resource: null,
 			error: null,
 			cancel_by_user: false,
 		};
@@ -47,14 +48,7 @@ class NewEasyDiscord {
 		} else if (code && state === sessionID) {
 			const response = await this._discord.continueRequest(code);
 			if (response.object) {
-				try {
-					const user = await response.object.getUser();
-					result.object = user;
-				} catch (err) {
-					result.error = err;
-				}
-				
-				response.object.revokeAccess();
+				result.resource = response.object;
 			} else {
 				result.error = response.error;
 			}
@@ -68,11 +62,10 @@ class EasyDiscord extends NewEasyDiscord {
 	/**
 	 * @param config oauth configuration table ({id, secret})
 	 * @param callback url callback which calls response(req)
-	 * @param scopes scopes used in authorization
 	 *
 	 */
-	constructor(config, callback, scopes) {
-		super(config, callback, scopes);
+	constructor(config, callback) {
+		super(config, callback, 'identify');
 	}
 
 	/**
@@ -94,7 +87,20 @@ class EasyDiscord extends NewEasyDiscord {
 	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
 	 */
 	async response(req) {
-		return super.response(req.query, req.sessionID);
+		const result = await super.response(req.query, req.sessionID);
+		if (result.resource) {
+			try {
+				const user = await result.resource.getUser();
+				result.object = user;
+			} catch (err) {
+				result.error = err;
+			}
+			
+			result.resource.revokeAccess();
+			result.resource = undefined;
+		}
+
+		return result;
 	}
 }
 
