@@ -14,7 +14,7 @@ class DiscordApi {
 		this._client = new AuthorizationCode({
 			client: config,
 			auth: {
-				tokenHost: 'https://discord.com/api',
+				tokenHost: 'https://discord.com',
 				tokenPath: '/api/oauth2/token',
 				revokePath: '/api/oauth2/token/revoke',
 				authorizePath: '/oauth2/authorize',
