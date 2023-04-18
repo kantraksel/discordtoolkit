@@ -1,7 +1,7 @@
 const { AuthorizationCode } = require('simple-oauth2');
 const https = require('https');
 
-async function HttpGet(token, url) {
+function HttpGet(token, url) {
 	const httpOptions = {
 		timeout: 10000,
 		headers: {
@@ -20,16 +20,19 @@ async function HttpGet(token, url) {
 	
 			res.on('end', () => {
 				if (res.statusCode !== 200) {
-					reject(res.statusCode);
-				}
-				try {
-					resolve(JSON.parse(data.toString()));
-				} catch (_) {
-					reject(0);
+					let error = new Error(`Resource returned ${res.statusCode}`);
+					error.statusCode = res.statusCode;
+					reject(error);
+				} else {
+					try {
+						resolve(JSON.parse(data.toString()));
+					} catch (error) {
+						reject(error);
+					}
 				}
 			});
-		}).on('error', (_) => {
-			reject(0);
+		}).on('error', (error) => {
+			reject(error);
 		});
 	});
 }
@@ -37,13 +40,13 @@ async function HttpGet(token, url) {
 class DiscordResource {
 	constructor(accessToken) {
 		this._accessToken = accessToken;
-		this.accessToken = accessToken.token.access_token;
 	}
 
 	/**
 	 * Get current user
 	 * 
-	 * @returns User object | error number
+	 * @returns User object
+	 * @throws Error object
 	 */
 	async getUser() {
 		return await HttpGet(this._accessToken.token.access_token, "https://discord.com/api/users/@me");
@@ -54,7 +57,8 @@ class DiscordResource {
 	 * 
 	 * @param guildId Guild Id
 	 * 
-	 * @returns Guild Member object | error number
+	 * @returns Guild Member object
+	 * @throws Error object
 	 */
 	async getMemberFromGuild(guildId) {
 		return await HttpGet(this._accessToken.token.access_token, `https://discord.com/api/users/@me/guilds/${guildId}/member`);
@@ -68,14 +72,22 @@ class DiscordResource {
 			await this._accessToken.revokeAll();
 		} catch (_) {}
 	}
+
+	/**
+	 * 
+	 * @returns string - access token
+	 */
+	getAccessToken() {
+		return _accessToken.token.access_token;
+	}
 }
 
 module.exports = class DiscordApi {
 
 	/**
 	 *
-	 * @param config oauth configuration table ({id, secret})
-	 * @param callback url callback which calls response(req)
+	 * @param config configuration table ({id, secret})
+	 * @param callback authorization calllback
 	 * @param scopes scopes used in authorization
 	 *
 	 */
@@ -102,13 +114,13 @@ module.exports = class DiscordApi {
 	/**
 	 * Creates url to authorization site
 	 *
-	 * @param id state id - cross site security parameter
+	 * @param stateId state id - cross site security parameter
 	 *
 	 * @returns string
 	 */
-	createRequest(id) {
+	createRequest(stateId) {
 		return this._client.authorizeURL({
-			state: id,
+			state: stateId,
 			...this._header,
 		});
 	}
@@ -116,9 +128,9 @@ module.exports = class DiscordApi {
 	/**
 	 * Gets access token from authorization code
 	 *
-	 * @param code code got from authorization site
+	 * @param code code obtained from authorization site
 	 * 
-	 * @returns object { object: DiscordResource | error: object }
+	 * @returns object { object?: DiscordResource | error?: any }
 	 */
 	async continueRequest(code) {
 		try {

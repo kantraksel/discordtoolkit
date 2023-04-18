@@ -1,9 +1,46 @@
 const DiscordApi = require('./discordapi');
 
+function compareSafe(object, other) {
+	if (typeof(object) !== 'string' || typeof(other) !== 'string') {
+		return false;
+	}
+
+	if (object.length === 0 || other.length === 0) {
+		return false;
+	}
+
+	let value = true;
+	let size = object.length;
+	if (size < other.length) {
+		size = other.length;
+	}
+	
+	let c1;
+	let c2;
+	for (let i = 0; i < size; i++) {
+		if (i < object.length) {
+			c1 = object[i];
+		} else {
+			c1 = object[0];
+			value = false;
+		}
+
+		if (i < other.length) {
+			c2 = other[i];
+		} else {
+			c2 = other[0];
+			value = false;
+		}
+
+		value = c1 !== c2 && value;
+	}
+	return value;
+}
+
 class NewEasyDiscord {
 	/**
-	 * @param config oauth configuration table ({id, secret})
-	 * @param callback url callback which calls response(req)
+	 * @param config configuration table ({id, secret})
+	 * @param callback authorization calllback
 	 * @param scopes scopes used in authorization
 	 *
 	 */
@@ -14,12 +51,13 @@ class NewEasyDiscord {
 	/**
 	 * Redirect to Discord authorization site
 	 *
-	 * @param sessionID unique sessionID
-	 * @param res OutgoungMessage object
+	 * @param sessionId unique session ID
+	 * @param res Express.Response | object { redirect(url: string) => any }
 	 *
+	 * @returns void
 	 */
-	request(sessionID, res) {
-		res.redirect(this._discord.createRequest(sessionID));
+	request(sessionId, res) {
+		res.redirect(this._discord.createRequest(sessionId));
 	}
 
 	/**
@@ -27,27 +65,29 @@ class NewEasyDiscord {
 	 * Returns access token wrapped in DiscordResource
 	 *
 	 * @param query deserialized GET query
-	 * @param sessionID unique sessionID, previously used in request()
+	 * @param sessionId unique session ID, previously used in request()
 	 *
-	 * @returns object {resource: DiscordResource | null, error: object | number | null, cancel_by_user: boolean}
+	 * @returns object {resource?: DiscordResource, error?: any, cancel_by_user: boolean}
 	 */
-	async response(query, sessionID) {
+	async response(query, sessionId) {
 		const { code, state, error, error_description } = query;
+
 		const result = {
 			resource: null,
 			error: null,
 			cancel_by_user: false,
 		};
 
-		if (error) {
-			if (error === 'access_denied') {
-				result.cancel_by_user = true;
-			} else {
-				result.error = {error, error_description};
-			}
-		} else if (code && state === sessionID) {
+		if (!compareSafe(sessionId, state)) {
+			return result;
+		}
+
+		if (error != null) {
+			result.error = {error, error_description};
+			result.cancel_by_user = error === 'access_denied';
+		} else if (code != null) {
 			const response = await this._discord.continueRequest(code);
-			if (response.object) {
+			if (response.object != null) {
 				result.resource = response.object;
 			} else {
 				result.error = response.error;
@@ -60,9 +100,10 @@ class NewEasyDiscord {
 
 class EasyDiscord extends NewEasyDiscord {
 	/**
-	 * @param config oauth configuration table ({id, secret})
-	 * @param callback url callback which calls response(req)
+	 * @param config configuration table ({id, secret})
+	 * @param callback authorization calllback
 	 *
+	 * @returns void
 	 */
 	constructor(config, callback) {
 		super(config, callback, 'identify');
@@ -71,8 +112,8 @@ class EasyDiscord extends NewEasyDiscord {
 	/**
 	 * Redirect to Discord authorization site
 	 *
-	 * @param req IncomingMessage object (from express-session)
-	 * @param res OutgoungMessage object
+	 * @param req Express.Request (express-session) | object { sessionID: string }
+	 * @param res Express.Response | object { redirect(url: string) => any }
 	 *
 	 */
 	request(req, res) {
@@ -81,10 +122,11 @@ class EasyDiscord extends NewEasyDiscord {
 
 	/**
 	 * Process response from Discord authorization site
+	 * Consumes authorization code, gets user object and revokes access token
 	 *
-	 * @param req IncomingMessage object (from express-session)
-	 *
-	 * @returns object {object: DiscordUser | null, error: object | number | null, cancel_by_user: boolean}
+	 * @param req Express.Request (express-session) | object { query: object, sessionID: string }
+	 * 
+	 * @returns object {object?: DiscordUser, error?: any, cancel_by_user: boolean}
 	 */
 	async response(req) {
 		const result = await super.response(req.query, req.sessionID);
