@@ -1,4 +1,5 @@
-const { EasyDiscord, NewEasyDiscord } = require('./easydiscord');
+const NewEasyDiscord = require('./easydiscord');
+const EasyDiscord = require('./easydiscord2');
 
 module.exports = {
 	EasyDiscord,
