@@ -32,7 +32,7 @@ function compareSafe(object, other) {
 			value = false;
 		}
 
-		value = c1 !== c2 && value;
+		value = c1 === c2 && value;
 	}
 	return value;
 }
