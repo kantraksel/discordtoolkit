@@ -2,17 +2,15 @@ import { AuthorizationCode } from 'simple-oauth2';
 import DiscordResource from './discordresource';
 
 class DiscordApi {
-
 	/**
-	 *
-	 * @param config configuration table ({id, secret})
-	 * @param callback authorization calllback
+	 * @param id client id
+	 * @param secret client secret
+	 * @param callback authorization callback
 	 * @param scopes scopes used in authorization
-	 *
 	 */
-	constructor(config, callback, scopes) {
+	constructor(id, secret, callback, scopes) {
 		this._client = new AuthorizationCode({
-			client: config,
+			client: {id, secret},
 			auth: {
 				tokenHost: 'https://discord.com',
 				tokenPath: '/api/oauth2/token',
@@ -49,18 +47,15 @@ class DiscordApi {
 	 *
 	 * @param code code obtained from authorization site
 	 * 
-	 * @returns object { object?: DiscordResource | error?: any }
+	 * @returns object: DiscordResource
+	 * @throws object: Error
 	 */
 	async continueRequest(code) {
-		try {
-			const accessToken = await this._client.getToken({
-				code,
-				...this._header,
-			});
-			return {object: new DiscordResource(accessToken)};
-		} catch (error) {
-			return {error: error};
-		}
+		const accessToken = await this._client.getToken({
+			code,
+			...this._header,
+		});
+		return new DiscordResource(accessToken);
 	}
 };
 

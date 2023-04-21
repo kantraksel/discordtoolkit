@@ -1,4 +1,5 @@
 import https from 'https';
+import ResourceError from './ResourceError';
 
 function HttpGet(token, url) {
 	const httpOptions = {
@@ -19,19 +20,17 @@ function HttpGet(token, url) {
 	
 			res.on('end', () => {
 				if (res.statusCode !== 200) {
-					let error = new Error(`Resource returned ${res.statusCode}`);
-					error.statusCode = res.statusCode;
-					reject(error);
+					reject(new ResourceError(res.statusCode, res.statusMessage));
 				} else {
 					try {
 						resolve(JSON.parse(data.toString()));
 					} catch (error) {
-						reject(error);
+						reject(new ResourceError(res.statusCode, 'Failed to parse response', {cause: error}));
 					}
 				}
 			});
 		}).on('error', (error) => {
-			reject(error);
+			reject(new ResourceError(0, 'HTTP transaction failed', {cause: error}));
 		});
 	});
 }
@@ -44,8 +43,8 @@ class DiscordResource {
 	/**
 	 * Get current user
 	 * 
-	 * @returns User object
-	 * @throws Error object
+	 * @returns object: DiscordUser
+	 * @throws object: ResourceError
 	 */
 	async getUser() {
 		return await HttpGet(this._accessToken.token.access_token, "https://discord.com/api/users/@me");
@@ -56,8 +55,8 @@ class DiscordResource {
 	 * 
 	 * @param guildId Guild Id
 	 * 
-	 * @returns Guild Member object
-	 * @throws Error object
+	 * @returns object: GuildMember
+	 * @throws object: ResourceError
 	 */
 	async getMemberFromGuild(guildId) {
 		return await HttpGet(this._accessToken.token.access_token, `https://discord.com/api/users/@me/guilds/${guildId}/member`);
@@ -73,8 +72,7 @@ class DiscordResource {
 	}
 
 	/**
-	 * 
-	 * @returns string - access token
+	 * @returns string
 	 */
 	getAccessToken() {
 		return _accessToken.token.access_token;

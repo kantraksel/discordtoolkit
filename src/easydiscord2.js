@@ -2,13 +2,14 @@ import NewEasyDiscord from './easydiscord';
 
 class EasyDiscord extends NewEasyDiscord {
 	/**
-	 * @param config configuration object ({id, secret})
-	 * @param callback authorization calllback
+	 * @param id client id
+	 * @param secret client secret
+	 * @param callback authorization callback
 	 *
 	 * @returns void
 	 */
-	constructor(config, callback) {
-		super(config, callback, 'identify');
+	constructor(id, secret, callback) {
+		super(id, secret, callback, 'identify');
 	}
 
 	/**
@@ -19,16 +20,15 @@ class EasyDiscord extends NewEasyDiscord {
 	 * @param req Express.Request | object { query: object }
 	 * @param requestId unique request ID, previously used in request() (do NOT use session ID)
 	 * 
-	 * @returns object {object?: DiscordUser, error?: any, cancel_by_user: boolean}
+	 * @returns object {object?: DiscordUser, error?: Error, cancelled: boolean} | null
 	 */
 	async response(req, requestId) {
 		const result = await super.response(req.query, requestId);
-		if (result.resource) {
+		if (result != null && result.resource != null) {
 			try {
-				const user = await result.resource.getUser();
-				result.object = user;
-			} catch (err) {
-				result.error = err;
+				result.object = await result.resource.getUser();
+			} catch (error) {
+				result.error = error;
 			}
 			
 			result.resource.revokeAccess();

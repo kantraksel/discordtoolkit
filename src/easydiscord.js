@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import DiscordApi from './discordapi';
+import AuthorizationError from './AuthorizationError';
 
 function compareSafe(object, other) {
 	if (typeof(object) !== 'string' || typeof(other) !== 'string') {
@@ -25,22 +26,20 @@ function compareSafe(object, other) {
 
 class NewEasyDiscord {
 	/**
-	 * @param config configuration object ({id, secret})
-	 * @param callback authorization calllback
+	 * @param id client id
+	 * @param secret client secret
+	 * @param callback authorization callback
 	 * @param scopes scopes used in authorization
-	 *
 	 */
-	constructor(config, callback, scopes) {
-		this._discord = new DiscordApi(config, callback, scopes);
+	constructor(id, secret, callback, scopes) {
+		this._discord = new DiscordApi(id, secret, callback, scopes);
 	}
 
 	/**
 	 * Redirect to Discord authorization site
 	 *
-	 * @param requestId unique request ID (do NOT use session ID)
-	 * @param res Express.Response | object { redirect(url: string) => any }
-	 *
-	 * @returns void
+	 * @param requestId string - unique request ID (do NOT use session ID)
+	 * @param res Express.Response | { redirect(url: string) => void }
 	 */
 	request(requestId, res) {
 		res.redirect(this._discord.createRequest(requestId));
@@ -49,35 +48,37 @@ class NewEasyDiscord {
 	/**
 	 * Process response from Discord authorization site
 	 * Returns access token wrapped in DiscordResource
+	 * Do NOT use session ID
 	 *
-	 * @param query deserialized GET query
-	 * @param requestId unique request ID, previously used in request() (do NOT use session ID)
+	 * @param query object - deserialized GET query
+	 * @param requestId string - unique request ID, previously used in request() (do NOT use session ID)
 	 *
-	 * @returns object {resource?: DiscordResource, error?: any, cancel_by_user: boolean}
+	 * @returns object {resource?: DiscordResource, error?: Error, cancelled: boolean} | null
 	 */
 	async response(query, requestId) {
 		const { code, state, error, error_description } = query;
 
+		if (!compareSafe(requestId, state)) {
+			return null;
+		}
+
 		const result = {
 			resource: null,
 			error: null,
-			cancel_by_user: false,
+			cancelled: false,
 		};
 
-		if (!compareSafe(requestId, state)) {
-			return result;
-		}
-
 		if (error != null) {
-			result.error = {error, error_description};
-			result.cancel_by_user = error === 'access_denied';
+			result.error = new AuthorizationError(error, error_description);
+			result.cancelled = error === 'access_denied';
 		} else if (code != null) {
-			const response = await this._discord.continueRequest(code);
-			if (response.object != null) {
-				result.resource = response.object;
-			} else {
-				result.error = response.error;
+			try {
+				result.resource = await this._discord.continueRequest(code);
+			} catch (error) {
+				result.error = error;
 			}
+		} else {
+			return null;
 		}
 		
 		return result;
