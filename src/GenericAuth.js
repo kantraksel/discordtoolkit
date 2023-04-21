@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import DiscordApi from './discordapi';
+import DiscordOAuth from './DiscordOAuth';
 import AuthorizationError from './AuthorizationError';
 
 function compareSafe(object, other) {
@@ -24,7 +24,7 @@ function compareSafe(object, other) {
 	return value && value2;
 }
 
-class NewEasyDiscord {
+class GenericAuth {
 	/**
 	 * @param id client id
 	 * @param secret client secret
@@ -32,11 +32,12 @@ class NewEasyDiscord {
 	 * @param scopes scopes used in authorization
 	 */
 	constructor(id, secret, callback, scopes) {
-		this._discord = new DiscordApi(id, secret, callback, scopes);
+		this._discord = new DiscordOAuth(id, secret, callback, scopes);
 	}
 
 	/**
 	 * Redirect to Discord authorization site
+	 * Do NOT use session ID
 	 *
 	 * @param requestId string - unique request ID (do NOT use session ID)
 	 * @param res Express.Response | { redirect(url: string) => void }
@@ -85,4 +86,4 @@ class NewEasyDiscord {
 	}
 }
 
-export default NewEasyDiscord;
+export default GenericAuth;

@@ -1,7 +1,7 @@
 import { AuthorizationCode } from 'simple-oauth2';
-import DiscordResource from './discordresource';
+import DiscordResource from './DiscordResource';
 
-class DiscordApi {
+class DiscordOAuth {
 	/**
 	 * @param id client id
 	 * @param secret client secret
@@ -59,4 +59,4 @@ class DiscordApi {
 	}
 };
 
-export default DiscordApi;
+export default DiscordOAuth;

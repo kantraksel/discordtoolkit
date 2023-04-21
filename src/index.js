@@ -1,11 +1,11 @@
-import NewEasyDiscord from './easydiscord';
-import EasyDiscord from './easydiscord2';
+import GenericAuth from './GenericAuth';
+import IdentityAuth from './IdentityAuth';
 import AuthorizationError from './AuthorizationError';
 import ResourceError from './ResourceError';
 
 export default {
-	EasyDiscord,
-	NewEasyDiscord,
+	GenericAuth,
+	IdentityAuth,
 	AuthorizationError,
 	ResourceError,
 };

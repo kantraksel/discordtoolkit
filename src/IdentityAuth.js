@@ -1,6 +1,6 @@
-import NewEasyDiscord from './easydiscord';
+import GenericAuth from './GenericAuth';
 
-class EasyDiscord extends NewEasyDiscord {
+class IdentityAuth extends GenericAuth {
 	/**
 	 * @param id client id
 	 * @param secret client secret
@@ -39,4 +39,4 @@ class EasyDiscord extends NewEasyDiscord {
 	}
 }
 
-export default EasyDiscord;
+export default IdentityAuth;
