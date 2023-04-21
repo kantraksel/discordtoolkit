@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const DiscordApi = require('./discordapi');
 
 function compareSafe(object, other) {
@@ -9,37 +10,22 @@ function compareSafe(object, other) {
 		return false;
 	}
 
+	let buff1 = Buffer.from(object);
+	let buff2 = Buffer.from(other);
+
 	let value = true;
-	let size = object.length;
-	if (size < other.length) {
-		size = other.length;
+	if (buff1.length != buff2.length) {
+		value = false;
+		buff2 = buff1;
 	}
-	
-	let c1;
-	let c2;
-	for (let i = 0; i < size; i++) {
-		if (i < object.length) {
-			c1 = object[i];
-		} else {
-			c1 = object[0];
-			value = false;
-		}
 
-		if (i < other.length) {
-			c2 = other[i];
-		} else {
-			c2 = other[0];
-			value = false;
-		}
-
-		value = c1 === c2 && value;
-	}
-	return value;
+	let value2 = crypto.timingSafeEqual(buff1, buff2);
+	return value && value2;
 }
 
 class NewEasyDiscord {
 	/**
-	 * @param config configuration table ({id, secret})
+	 * @param config configuration object ({id, secret})
 	 * @param callback authorization calllback
 	 * @param scopes scopes used in authorization
 	 *
@@ -51,13 +37,13 @@ class NewEasyDiscord {
 	/**
 	 * Redirect to Discord authorization site
 	 *
-	 * @param sessionId unique session ID
+	 * @param requestId unique request ID (do NOT use session ID)
 	 * @param res Express.Response | object { redirect(url: string) => any }
 	 *
 	 * @returns void
 	 */
-	request(sessionId, res) {
-		res.redirect(this._discord.createRequest(sessionId));
+	request(requestId, res) {
+		res.redirect(this._discord.createRequest(requestId));
 	}
 
 	/**
@@ -65,11 +51,11 @@ class NewEasyDiscord {
 	 * Returns access token wrapped in DiscordResource
 	 *
 	 * @param query deserialized GET query
-	 * @param sessionId unique session ID, previously used in request()
+	 * @param requestId unique request ID, previously used in request() (do NOT use session ID)
 	 *
 	 * @returns object {resource?: DiscordResource, error?: any, cancel_by_user: boolean}
 	 */
-	async response(query, sessionId) {
+	async response(query, requestId) {
 		const { code, state, error, error_description } = query;
 
 		const result = {
@@ -78,7 +64,7 @@ class NewEasyDiscord {
 			cancel_by_user: false,
 		};
 
-		if (!compareSafe(sessionId, state)) {
+		if (!compareSafe(requestId, state)) {
 			return result;
 		}
 

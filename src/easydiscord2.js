@@ -2,7 +2,7 @@ const NewEasyDiscord = require('./easydiscord');
 
 class EasyDiscord extends NewEasyDiscord {
 	/**
-	 * @param config configuration table ({id, secret})
+	 * @param config configuration object ({id, secret})
 	 * @param callback authorization calllback
 	 *
 	 * @returns void
@@ -12,26 +12,17 @@ class EasyDiscord extends NewEasyDiscord {
 	}
 
 	/**
-	 * Redirect to Discord authorization site
-	 *
-	 * @param req Express.Request (express-session) | object { sessionID: string }
-	 * @param res Express.Response | object { redirect(url: string) => any }
-	 *
-	 */
-	request(req, res) {
-		super.request(req.sessionID, res);
-	}
-
-	/**
 	 * Process response from Discord authorization site
 	 * Consumes authorization code, gets user object and revokes access token
+	 * Do NOT use session ID
 	 *
-	 * @param req Express.Request (express-session) | object { query: object, sessionID: string }
+	 * @param req Express.Request | object { query: object }
+	 * @param requestId unique request ID, previously used in request() (do NOT use session ID)
 	 * 
 	 * @returns object {object?: DiscordUser, error?: any, cancel_by_user: boolean}
 	 */
-	async response(req) {
-		const result = await super.response(req.query, req.sessionID);
+	async response(req, requestId) {
+		const result = await super.response(req.query, requestId);
 		if (result.resource) {
 			try {
 				const user = await result.resource.getUser();

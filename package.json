@@ -1,6 +1,6 @@
 {
   "name": "discordtoolkit",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "description": "Simple toolkit for interactions with Discord",
   "main": "src/index.js",
   "dependencies": {
