@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const DiscordApi = require('./discordapi');
+import crypto from 'crypto';
+import DiscordApi from './discordapi';
 
 function compareSafe(object, other) {
 	if (typeof(object) !== 'string' || typeof(other) !== 'string') {
@@ -84,4 +84,4 @@ class NewEasyDiscord {
 	}
 }
 
-module.exports = NewEasyDiscord;
+export default NewEasyDiscord;

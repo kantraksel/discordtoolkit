@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 function HttpGet(token, url) {
 	const httpOptions = {
@@ -81,4 +81,4 @@ class DiscordResource {
 	}
 }
 
-module.exports = DiscordResource;
+export default DiscordResource;

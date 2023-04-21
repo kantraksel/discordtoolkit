@@ -1,7 +1,7 @@
-const NewEasyDiscord = require('./easydiscord');
-const EasyDiscord = require('./easydiscord2');
+import NewEasyDiscord from './easydiscord';
+import EasyDiscord from './easydiscord2';
 
-module.exports = {
+export default {
 	EasyDiscord,
 	NewEasyDiscord,
 };

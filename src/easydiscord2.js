@@ -1,4 +1,4 @@
-const NewEasyDiscord = require('./easydiscord');
+import NewEasyDiscord from './easydiscord';
 
 class EasyDiscord extends NewEasyDiscord {
 	/**
@@ -39,4 +39,4 @@ class EasyDiscord extends NewEasyDiscord {
 	}
 }
 
-module.exports = EasyDiscord;
+export default EasyDiscord;
