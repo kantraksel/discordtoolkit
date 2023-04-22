@@ -1,5 +1,5 @@
-import { AuthorizationCode } from 'simple-oauth2';
-import DiscordResource from './DiscordResource';
+const { AuthorizationCode } = require('simple-oauth2');
+const DiscordResource = require('./DiscordResource');
 
 class DiscordOAuth {
 	/**
@@ -59,4 +59,4 @@ class DiscordOAuth {
 	}
 };
 
-export default DiscordOAuth;
+module.exports = DiscordOAuth;

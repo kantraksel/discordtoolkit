@@ -1,4 +1,4 @@
-import GenericAuth from './GenericAuth';
+const GenericAuth = require('./GenericAuth');
 
 class IdentityAuth extends GenericAuth {
 	/**
@@ -39,4 +39,4 @@ class IdentityAuth extends GenericAuth {
 	}
 }
 
-export default IdentityAuth;
+module.exports = IdentityAuth;

@@ -1,6 +1,6 @@
-import crypto from 'crypto';
-import DiscordOAuth from './DiscordOAuth';
-import AuthorizationError from './AuthorizationError';
+const crypto = require('crypto');
+const DiscordOAuth = require( './DiscordOAuth');
+const AuthorizationError = require( './AuthorizationError');
 
 function compareSafe(object, other) {
 	if (typeof(object) !== 'string' || typeof(other) !== 'string') {
@@ -86,4 +86,4 @@ class GenericAuth {
 	}
 }
 
-export default GenericAuth;
+module.exports = GenericAuth;

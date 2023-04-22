@@ -1,9 +1,9 @@
-import GenericAuth from './GenericAuth';
-import IdentityAuth from './IdentityAuth';
-import AuthorizationError from './AuthorizationError';
-import ResourceError from './ResourceError';
+const GenericAuth = require('./GenericAuth');
+const IdentityAuth = require('./IdentityAuth');
+const AuthorizationError = require('./AuthorizationError');
+const ResourceError = require('./ResourceError');
 
-export default {
+module.exports = {
 	GenericAuth,
 	IdentityAuth,
 	AuthorizationError,

@@ -8,4 +8,4 @@ class ResourceError extends Error {
 	}
 }
 
-export default ResourceError;
+module.exports = ResourceError;
